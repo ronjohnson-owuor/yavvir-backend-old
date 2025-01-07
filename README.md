@@ -3,8 +3,8 @@ this boilerplate is aimed at helping people developing with this tech stack (exp
 
 ### steps on how to use express-typeorm-boillerplate 
 
-*** step 1 ***
+* step 1 *
 
 
 
-*** running a migration ***
+* running a migration *
