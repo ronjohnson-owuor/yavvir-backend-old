@@ -1,1 +1,0 @@
-this is where app services are divided into categories and managed eg user service might contain login,email verification etc.

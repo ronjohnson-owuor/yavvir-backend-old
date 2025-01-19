@@ -1,11 +1,13 @@
 import express, { Request, Response } from "express";
 import router from "./router";
+import { googleAccount } from "../services/auth";
+import cors from 'cors';
+import { corsOptions } from "../services/corsOptions";
 
+router.post(
+  "/google-user",
+  cors(corsOptions),
+  async (req: Request, res: Response) => await googleAccount(req, res)
+);
 
-/* this is a example route in the users directory of the program
- you can add many routes as possible */
-router.get("/", (req: Request, res: Response) => {
-    res.send("Hello World from Userroute!");
-  });
-
-  export default router;
+export default router;

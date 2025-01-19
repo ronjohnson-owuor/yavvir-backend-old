@@ -1,18 +1,15 @@
 import { Entity, PrimaryGeneratedColumn, Column } from "typeorm"
 
 @Entity()
-export class User {
+export class Token {
 
     @PrimaryGeneratedColumn()
     id: number
 
     @Column()
-    firstName: string
+    userid: number
 
     @Column()
-    lastName: string
-
-    @Column()
-    age: number
+    token_value: string
 
 }
