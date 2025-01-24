@@ -20,6 +20,7 @@
       "mysql": "^2.14.1",
       "nodemon": "^3.1.9",
       "reflect-metadata": "^0.1.13",
+      "resend": "^4.1.1",
       "typeorm": "0.3.20",
       "uid-generator": "^2.0.0"
    },
