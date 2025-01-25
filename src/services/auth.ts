@@ -3,7 +3,11 @@ import requestvalidation from "./requestvalidation";
 import { AppDataSource } from "../data-source";
 import { Users } from "../entity/Users";
 import { Token } from "../entity/Token";
-import { encryptPassWord, generateToken } from "./passwordManager";
+import {
+  decryptedPassword,
+  encryptPassWord,
+  generateToken,
+} from "./passwordManager";
 import checkEmail from "./checkemail";
 import pin from "./generatepin";
 import * as dotenv from "dotenv";
@@ -28,7 +32,6 @@ export const googleAccount = async (req: Request, res: Response) => {
     return;
   }
 
-  // check email if its already in the database
   const userRepository = AppDataSource.getRepository(Users);
   const user = await userRepository.findOneBy({
     email: req.body.email,
@@ -42,11 +45,8 @@ export const googleAccount = async (req: Request, res: Response) => {
     return;
   }
 
-  // register the user
   let successfull = true;
-  // encrypt userpassword
   const encryptedPassword = encryptPassWord(req.body.password);
-  // generate token
   const userToken = await generateToken();
   const type =
     req.body.type == 1 ? "student" : req.body.type == 2 ? "teacher" : "parent";
@@ -114,7 +114,6 @@ export const googleAccount = async (req: Request, res: Response) => {
   }
 };
 
-// send email verification code
 export const verificationCode = async (req: Request, res: Response) => {
   const { message, proceed } = requestvalidation(req.body, ["email:string"]);
   if (!proceed) {
@@ -125,10 +124,8 @@ export const verificationCode = async (req: Request, res: Response) => {
     return;
   }
 
-  // check if the email already exist
   const { email_message, email_proceed } = await checkEmail(req.body.email);
   if (!email_proceed) {
-    // if the email already exist
     res.json({
       message: email_message,
       proceed: false,
@@ -179,19 +176,6 @@ export const verificationCode = async (req: Request, res: Response) => {
         },
       ])
       .execute();
-
-    /*     setTimeout(async () => {
-      try {
-        await AppDataSource.createQueryBuilder()
-          .delete()
-          .from(Emailcode)
-          .where("email = :email", { email: req.body.email })
-          .execute();
-        console.log("code has expired");
-      } catch (err) {
-        console.error("Failed to delete verification code:", err);
-      }
-    }, 600000);  */ //code to expire after 10 minutes set up a cron job
   } catch (err) {
     res.json({
       message: "network error try again in 5sec",
@@ -246,7 +230,8 @@ export const verifyEmailCode = async (req: Request, res: Response) => {
   }
 
   await AppDataSource.createQueryBuilder()
-    .delete().from(Emailcode)
+    .delete()
+    .from(Emailcode)
     .where("code = :code", { code: req.body.code })
     .execute();
 
@@ -255,4 +240,50 @@ export const verifyEmailCode = async (req: Request, res: Response) => {
     proceed: true,
   });
   return;
+};
+
+export const loginUser = async (req: Request, res: Response) => {
+  let { message, proceed } = requestvalidation(req.body, [
+    "email:string",
+    "password:string",
+  ]);
+  if (!proceed) {
+    res.json({
+      message,
+      proceed,
+    });
+    return;
+  }
+
+  const user = await AppDataSource.getRepository(Users).findOneBy({
+    email: req.body.email,
+  });
+  if (!user) {
+    res.json({
+      message: "that user does not exist",
+      proceed: false,
+    });
+    return;
+  }
+  let password = decryptedPassword(user.password);
+  if (password != req.body.password) {
+    res.json({
+      message: "invalid password,that is a wrong password.",
+      proceed: false,
+    });
+    return;
+  }
+  const token = await generateToken();
+  await AppDataSource.createQueryBuilder()
+    .update(Token)
+    .set({ token_value:token })
+    .where("id =:id", { id: user.id })
+    .execute();
+    res.json({
+      message:"login successfull",
+      proceed:true,
+      token,
+      url:`/${user.role}-dashboard`
+    });
+    return;
 };

@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import router from "./router";
-import { googleAccount, verificationCode, verifyEmailCode } from "../services/auth";
+import { googleAccount, loginUser, verificationCode, verifyEmailCode } from "../services/auth";
 import cors from 'cors';
 import { corsOptions } from "../services/corsOptions";
 
@@ -9,6 +9,12 @@ router.post(
   "/signup-user",
   cors(corsOptions),
   async (req: Request, res: Response) => await googleAccount(req, res)
+);
+
+router.post(
+  "/login-user",
+  cors(corsOptions),
+  async (req: Request, res: Response) => await loginUser(req, res)
 );
 
 router.post(

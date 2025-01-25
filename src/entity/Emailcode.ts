@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from "typeorm"
 
 @Entity()
 export class Emailcode {
@@ -11,5 +11,8 @@ export class Emailcode {
 
     @Column()
     code: number
+
+    @CreateDateColumn({type:'timestamp'})
+    createdAt:Date
 
 }
