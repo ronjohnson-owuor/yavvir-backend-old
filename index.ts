@@ -3,6 +3,7 @@ import router from "./src/routes/router";
 import { AppDataSource } from "./src/data-source";
 import * as dotenv from 'dotenv';
 import userRoutes from "./src/routes/user_routes";
+import defaultRoute from "./src/routes/default";
 import cors from "cors";
 import { everyminuteTask } from "./src/services/cronservice";
 dotenv.config();
@@ -12,6 +13,7 @@ app.use(cors());
 app.use(express.json());
 app.use(router);
 app.use("/api",userRoutes); // default routes for users
+app.use("/",defaultRoute);
 const PORT = process.env.APP_PORT;
 AppDataSource.initialize().then(()=>{
     console.log("database connected successfully");
