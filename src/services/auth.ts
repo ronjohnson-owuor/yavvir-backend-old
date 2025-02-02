@@ -13,6 +13,7 @@ import pin from "./generatepin";
 import * as dotenv from "dotenv";
 import { Resend } from "resend";
 import { Emailcode } from "../entity/Emailcode";
+import validateAuthToken from "./validateAuthtoken";
 dotenv.config();
 
 export const googleAccount = async (req: Request, res: Response) => {
@@ -276,14 +277,47 @@ export const loginUser = async (req: Request, res: Response) => {
   const token = await generateToken();
   await AppDataSource.createQueryBuilder()
     .update(Token)
-    .set({ token_value:token })
+    .set({ token_value: token })
     .where("id =:id", { id: user.id })
     .execute();
+  res.json({
+    message: "login successfull",
+    proceed: true,
+    token,
+    url: `/${user.role}-dashboard`,
+  });
+  return;
+};
+
+export const getUser = async (req: Request, res: Response) => {
+  const { message, proceed, userid } = await validateAuthToken(
+    req.headers.authorization
+  );
+
+  if (!proceed) {
     res.json({
-      message:"login successfull",
-      proceed:true,
-      token,
-      url:`/${user.role}-dashboard`
+      message,
+      proceed,
     });
     return;
+  }
+
+  const user = await AppDataSource.getRepository(Users).findOneBy({
+    id: userid!,
+  });
+  const userobject = {
+    username:user?.username,
+    email:user?.email,
+    id:user?.id,
+    phone:user?.phone,
+    picture:user?.picture,
+    role:user?.role
+    
+  }
+  res.json({
+    message,
+    proceed,
+    user:userobject,
+  });
+  return;
 };
