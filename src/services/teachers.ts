@@ -135,7 +135,8 @@ export const get_teacher_details = async (req: Request, res: Response) => {
     subject: teacherDetailsRepo?.subjects,
     bio: teacherDetailsRepo?.bio,
     extra_info: teacherDetailsRepo?.extra_info,
-  };null
+  };
+  null;
 
   res.json({
     message: "Teacher data retrieved",
@@ -144,5 +145,57 @@ export const get_teacher_details = async (req: Request, res: Response) => {
     teacher_data,
   });
 
+  return;
+};
+
+export const checkProfileCompleteness = async (req: Request, res: Response) => {
+  let profile_score = 100;
+  const tokenResponse = await validateAuthToken(req.headers.authorization);
+  if (!tokenResponse.proceed) {
+    res.json({
+      proceed: false,
+      message: tokenResponse.message,
+    });
+    return;
+  }
+  // check if the profile picture is there
+  const user = await AppDataSource.getRepository(Users).findOneBy({
+    id: tokenResponse.userid!,
+  });
+  if (!user?.picture) {
+    profile_score -= 20;
+  }
+  // check if the teacher details are availlable
+  const teacherdata = await AppDataSource.getRepository(
+    Teacherdetails
+  ).findOneBy({ user_id: tokenResponse.userid! });
+  if (!teacherdata?.bio) {
+    profile_score -= 10;
+  }
+
+  if (!teacherdata?.extra_info) {
+    profile_score -= 10;
+  }
+
+  if (!teacherdata?.subjects) {
+    profile_score -= 10;
+  }
+
+  if (!teacherdata?.certificates) {
+    profile_score -= 20;
+  }
+
+  if (!teacherdata?.location) {
+    profile_score -= 10;
+  }
+
+  if (!teacherdata?.school) {
+    profile_score -= 10;
+  }
+
+  res.json({
+    proceed: true,
+    score: profile_score,
+  });
   return;
 };

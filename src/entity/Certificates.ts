@@ -12,4 +12,7 @@ export class Certificates {
     @Column()
     certificate_path: string
 
+    @Column()
+    title: string
+
 }

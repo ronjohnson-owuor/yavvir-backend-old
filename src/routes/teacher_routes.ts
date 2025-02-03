@@ -4,6 +4,7 @@ import cors from "cors";
 import router from "./router";
 import { corsOptions } from "../services/corsOptions";
 import {
+  checkProfileCompleteness,
   edit_teacher_details,
   get_teacher_details,
 } from "../services/teachers";
@@ -21,9 +22,14 @@ router.post(
 );
 
 router.post(
-    "/upload-teacher-files",
-    cors(corsOptions),
-    async (req: Request, res: Response) => uploadData(req, res)
-  );
+  "/upload-teacher-files",
+  cors(corsOptions),
+  async (req: Request, res: Response) => uploadData(req, res)
+);
+router.post(
+  "/profile-completeness",
+  cors(corsOptions),
+  async (req: Request, res: Response) => checkProfileCompleteness(req, res)
+);
 
 export default router;

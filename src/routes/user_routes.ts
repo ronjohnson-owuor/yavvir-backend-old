@@ -3,6 +3,7 @@ import router from "./router";
 import { getUser, googleAccount, loginUser, verificationCode, verifyEmailCode } from "../services/auth";
 import cors from 'cors';
 import { corsOptions } from "../services/corsOptions";
+import { addProfilePic } from "../services/filemanager";
 
 
 router.post(
@@ -32,6 +33,12 @@ router.get(
   "/get-user-data",
   cors(corsOptions),
   async (req: Request, res: Response) => await getUser(req, res)
+);
+
+router.post(
+  "/upload-profile",
+  cors(corsOptions),
+  async (req: Request, res: Response) => addProfilePic(req, res)
 );
 
 export default router;
