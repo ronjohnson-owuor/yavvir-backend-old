@@ -2,6 +2,13 @@ export default function requestvalidation(
   body: object,
   params: string[]
 ) {
+
+  if(!body){
+   return {
+    message:"the body has nothing to be checked",
+    proceed:false
+   }
+  }
   /* first check if the object is empty if the body or query is emty just cancell and return return */
   let emptyObject = Object.keys(body).length === 0;
   let message: null | string = null;
