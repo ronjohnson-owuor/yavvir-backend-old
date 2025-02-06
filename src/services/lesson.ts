@@ -29,7 +29,7 @@ export const createLesson = async (req: Request, res: Response) => {
   }
 
   const request_response = requestvalidation(req.body, [
-    "name:string",
+    "lesson_name:string",
     "duration:number",
     "start_time:string",
   ]);
@@ -48,7 +48,7 @@ export const createLesson = async (req: Request, res: Response) => {
     const lesson = lessonRepository.create({
       creator: authResponse.userid!,
       duration: req.body.duration,
-      lesson_name: req.body.name,
+      lesson_name: req.body.lesson_name,
       lesson_uuid: lesson_link,
       start_time: req.body.start_time,
       expired: false,
@@ -84,6 +84,7 @@ export const getLesson = async (req: Request, res: Response) => {
   const lessonRepository = AppDataSource.getRepository(Lesson);
   const lessons = await lessonRepository.findBy({
     creator: authResponse.userid!,
+    expired:false
   });
   res.json({
     message: "lessons retrieved",
@@ -133,7 +134,7 @@ export const updateLesson = async (req: Request, res: Response) => {
     return;
   }
 
-  lessons.lesson_name = req.body.name || lessons.lesson_name;
+  lessons.lesson_name = req.body.lesson_name || lessons.lesson_name;
   lessons.duration = req.body.duration || lessons.duration;
   lessons.start_time = req.body.start_time || lessons.start_time;
   await lessonRepository.save(lessons);
