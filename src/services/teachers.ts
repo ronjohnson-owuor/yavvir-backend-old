@@ -19,7 +19,7 @@ export const edit_teacher_details = async (req: Request, res: Response) => {
   try {
     let user_id = authresponse.userid!;
     let certificates = req.body.certificates || null;
-    let ground_tutor = req.body.ground_tutor;
+    let ground_tutor = req.body.ground_tutor || undefined;
     let location = req.body.location || null;
     let school = req.body.school || null;
     let subjects = req.body.subjects || null;

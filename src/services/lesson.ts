@@ -5,7 +5,8 @@ import { Users } from "../entity/Users";
 import requestvalidation from "./requestvalidation";
 import shortUUID from "short-uuid";
 import { Lesson } from "../entity/Lesson";
-import { request } from "http";
+import { Refferals } from "../entity/Refferals";
+import { Teacherdetails } from "../entity/Teacherdetails";
 
 export const createLesson = async (req: Request, res: Response) => {
   const authResponse = await validateAuthToken(req.headers.authorization);
@@ -84,7 +85,7 @@ export const getLesson = async (req: Request, res: Response) => {
   const lessonRepository = AppDataSource.getRepository(Lesson);
   const lessons = await lessonRepository.findBy({
     creator: authResponse.userid!,
-    expired:false
+    expired: false,
   });
   res.json({
     message: "lessons retrieved",
@@ -186,8 +187,92 @@ export const deleteLesson = async (req: Request, res: Response) => {
   lesson.expired = true;
   await lessonRepository.save(lesson);
   res.json({
-    message:"Lesson deleted successfully",
-    proceed:true
+    message: "Lesson deleted successfully",
+    proceed: true,
+  });
+  return;
+};
+
+export const generateRefUrl = async (req: Request, res: Response) => {
+  const { proceed, message, userid } = await validateAuthToken(
+    req.headers.authorization
+  );
+  if (!proceed) {
+    res.json({
+      message,
+      proceed,
+    });
+    return;
+  }
+
+  const refferalCode = shortUUID.generate();
+  try {
+    const refRepository = AppDataSource.getRepository(Refferals);
+    // check if the user already has a code
+    const code = await refRepository.findOneBy({ userid: userid! });
+    if (code) {
+      res.json({
+        message: "retrieved",
+        proceed: true,
+        reff: code.ref_value,
+      });
+      return;
+    }
+
+    const ref_query = refRepository.create({
+      userid: userid!,
+      ref_value: refferalCode,
+    });
+
+    await refRepository.save(ref_query);
+
+    res.json({
+      proceed: true,
+      reff: refferalCode,
+      message: "generated",
+    });
+
+    return;
+  } catch (error) {
+    res.json({
+      proceed: false,
+      message: "error generating refferal link,try again later",
+    });
+    return;
+  }
+};
+
+export const lessonData = async (req: Request, res: Response) => {
+  const { message, userid, proceed } = await validateAuthToken(
+    req.headers.authorization
+  );
+  if (!proceed) {
+    res.json({
+      message,
+      proceed,
+    });
+    return;
+  }
+
+  const lessonRepo = AppDataSource.getRepository(Lesson);
+  const teacherDetailsRepo = AppDataSource.getRepository(Teacherdetails);
+  const totalLesson = await lessonRepo.count({ where: { creator: userid! } });
+  const teacherDetails = await teacherDetailsRepo.findOneBy({user_id:userid!});
+  const expiredLesson = await lessonRepo.count({
+    where: { creator: userid!, expired: true },
+  });
+  const pendingLesson = await lessonRepo.count({
+    where: { creator: userid!, expired: false },
+  });
+
+  res.json({
+    proceed: true,
+    isPremium:teacherDetails?.premium??false,
+    lesson: {
+      total: totalLesson,
+      expired: expiredLesson,
+      pending: pendingLesson,
+    },
   });
   return;
 };

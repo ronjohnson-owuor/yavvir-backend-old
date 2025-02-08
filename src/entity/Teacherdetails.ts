@@ -31,4 +31,7 @@ export class Teacherdetails {
     @Column({nullable:true})
     extra_info: string
 
+    @Column({default:false})
+    premium:boolean
+
 }

@@ -9,7 +9,7 @@ import {
   get_teacher_details,
 } from "../services/teachers";
 import { uploadData } from "../services/filemanager";
-import { createLesson, deleteLesson, getLesson, updateLesson } from "../services/lesson";
+import { createLesson, deleteLesson, getLesson, lessonData, updateLesson } from "../services/lesson";
 
 router.post(
   "/edit-teacher-details",
@@ -45,6 +45,7 @@ router.post(
   async (req: Request, res: Response) => getLesson(req, res)
 );
 
+
 router.post(
   "/update-lesson",
   cors(corsOptions),
@@ -55,6 +56,12 @@ router.post(
   "/delete-lesson",
   cors(corsOptions),
   async (req: Request, res: Response) => deleteLesson (req, res)
+);
+
+router.post(
+  "/lessons-data",
+  cors(corsOptions),
+  async (req: Request, res: Response) => lessonData (req, res)
 );
 
 export default router;
