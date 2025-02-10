@@ -19,7 +19,7 @@ export const edit_teacher_details = async (req: Request, res: Response) => {
   try {
     let user_id = authresponse.userid!;
     let certificates = req.body.certificates || null;
-    let ground_tutor = req.body.ground_tutor;
+    let ground_tutor = req.body.ground_tutor || undefined;
     let location = req.body.location || null;
     let school = req.body.school || null;
     let subjects = req.body.subjects || null;
@@ -199,3 +199,29 @@ export const checkProfileCompleteness = async (req: Request, res: Response) => {
   });
   return;
 };
+
+export const isPremium = async (req:Request,res:Response) =>{
+  const {message,proceed,userid} = await validateAuthToken(req.headers.authorization);
+  if(!proceed){
+    res.json({
+      proceed,
+      premium:false
+    });
+    return
+  }
+
+  const teacher_data = await AppDataSource.getRepository(Teacherdetails).findOneBy({user_id:userid!});
+  if(!teacher_data){
+    res.json({
+      proceed:false,
+      premium:false
+    });
+    return;
+  }
+
+  res.json({
+    proceed:true,
+    premium:teacher_data.premium
+  });
+  return;
+}

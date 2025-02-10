@@ -4,6 +4,7 @@ import { getUser, googleAccount, loginUser, verificationCode, verifyEmailCode } 
 import cors from 'cors';
 import { corsOptions } from "../services/corsOptions";
 import { addProfilePic } from "../services/filemanager";
+import { generateRefUrl } from "../services/lesson";
 
 
 router.post(
@@ -39,6 +40,12 @@ router.post(
   "/upload-profile",
   cors(corsOptions),
   async (req: Request, res: Response) => addProfilePic(req, res)
+);
+
+router.post(
+  "/get-refferal",
+  cors(corsOptions),
+  async (req: Request, res: Response) => generateRefUrl(req, res)
 );
 
 export default router;

@@ -5,6 +5,7 @@ import * as dotenv from 'dotenv';
 import userRoutes from "./src/routes/user_routes";
 import defaultRoute from "./src/routes/default";
 import teacherRoutes from './src/routes/teacher_routes'
+import paymentRoutes from './src/routes/payment_route';
 import cors from "cors";
 import { everyminuteTask } from "./src/services/cronservice";
 import fileUpload from "express-fileupload";
@@ -18,6 +19,7 @@ app.use(router);
 app.use("/api",userRoutes); // default routes for users
 app.use("/",defaultRoute);
 app.use("/api/teacher-api",teacherRoutes);
+app.use("/api/payment-api",paymentRoutes);
 const PORT = process.env.APP_PORT;
 AppDataSource.initialize().then(()=>{
     console.log("database connected successfully");

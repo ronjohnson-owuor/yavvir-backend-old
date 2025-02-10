@@ -7,8 +7,10 @@ import {
   checkProfileCompleteness,
   edit_teacher_details,
   get_teacher_details,
+  isPremium,
 } from "../services/teachers";
 import { uploadData } from "../services/filemanager";
+import { createLesson, deleteLesson, getLesson, lessonData, updateLesson } from "../services/lesson";
 
 router.post(
   "/edit-teacher-details",
@@ -30,6 +32,43 @@ router.post(
   "/profile-completeness",
   cors(corsOptions),
   async (req: Request, res: Response) => checkProfileCompleteness(req, res)
+);
+
+router.post(
+  "/create-lesson",
+  cors(corsOptions),
+  async (req: Request, res: Response) => createLesson(req, res)
+);
+
+router.post(
+  "/get-lesson",
+  cors(corsOptions),
+  async (req: Request, res: Response) => getLesson(req, res)
+);
+
+
+router.post(
+  "/update-lesson",
+  cors(corsOptions),
+  async (req: Request, res: Response) => updateLesson(req, res)
+);
+
+router.post(
+  "/delete-lesson",
+  cors(corsOptions),
+  async (req: Request, res: Response) => deleteLesson (req, res)
+);
+
+router.post(
+  "/lessons-data",
+  cors(corsOptions),
+  async (req: Request, res: Response) => lessonData (req, res)
+);
+
+router.get(
+  "/is-premium",
+  cors(corsOptions),
+  async (req: Request, res: Response) => isPremium (req, res)
 );
 
 export default router;
