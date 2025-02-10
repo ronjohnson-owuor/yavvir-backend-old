@@ -7,7 +7,10 @@ import shortUUID from "short-uuid";
 import { Lesson } from "../entity/Lesson";
 import { Refferals } from "../entity/Refferals";
 import { Teacherdetails } from "../entity/Teacherdetails";
+import moment from "moment";
+import { Lessonprice } from "../entity/Lessonprice";
 
+const lessonPriceRepo = AppDataSource.getRepository(Lessonprice);
 export const createLesson = async (req: Request, res: Response) => {
   const authResponse = await validateAuthToken(req.headers.authorization);
 
@@ -33,6 +36,7 @@ export const createLesson = async (req: Request, res: Response) => {
     "lesson_name:string",
     "duration:number",
     "start_time:string",
+    "lesson_price:number",
   ]);
 
   if (!request_response.proceed) {
@@ -44,14 +48,33 @@ export const createLesson = async (req: Request, res: Response) => {
   }
 
   const lesson_link = shortUUID.generate();
+  const start_time = req.body.start_time;
+  const duration = req.body.duration + 5; // add a bonus 5 minutes
+  const end_time = moment(start_time).add(duration, "minutes").toISOString();
+
+  const lesson_price = req.body.lesson_price;
+  if (lesson_price < 250) {
+    res.json({
+      proceed: false,
+      message:
+        "make sure your lesson price is more or eequal to 250 for maximum profit",
+    });
+    return;
+  }
   try {
     const lessonRepository = AppDataSource.getRepository(Lesson);
+    const lessonPrice = lessonPriceRepo.create({
+      lesson_price,
+      lesson_uuid: lesson_link,
+    });
+    await lessonPriceRepo.save(lessonPrice);
     const lesson = lessonRepository.create({
       creator: authResponse.userid!,
-      duration: req.body.duration,
+      duration,
       lesson_name: req.body.lesson_name,
       lesson_uuid: lesson_link,
-      start_time: req.body.start_time,
+      start_time,
+      end_time,
       expired: false,
     });
 
@@ -134,10 +157,29 @@ export const updateLesson = async (req: Request, res: Response) => {
     });
     return;
   }
-
+  const start_time = req.body.start_time || lessons.start_time;
+  const duration =
+    (req.body.duration && req.body.duration + 5) || lessons.duration;
   lessons.lesson_name = req.body.lesson_name || lessons.lesson_name;
-  lessons.duration = req.body.duration || lessons.duration;
-  lessons.start_time = req.body.start_time || lessons.start_time;
+  lessons.duration = duration;
+  lessons.start_time = start_time;
+
+  const lesson_price = req.body.lesson_price;
+  if (lesson_price) {
+    if(lesson_price < 250){
+      res.json({
+        proceed: false,
+        message:
+          "make sure your lesson price is more or eequal to 250 for maximum profit",
+      });
+      return;
+    }
+    lessonPriceRepo.update({lesson_uuid:lessons.lesson_uuid},{lesson_price});
+  }
+
+
+  const end_time = moment(start_time).add(duration, "minutes").toDate();
+  lessons.end_time = end_time;
   await lessonRepository.save(lessons);
 
   res.json({
@@ -146,6 +188,8 @@ export const updateLesson = async (req: Request, res: Response) => {
   });
   return;
 };
+
+
 
 export const deleteLesson = async (req: Request, res: Response) => {
   const authResponse = await validateAuthToken(req.headers.authorization);
@@ -257,7 +301,9 @@ export const lessonData = async (req: Request, res: Response) => {
   const lessonRepo = AppDataSource.getRepository(Lesson);
   const teacherDetailsRepo = AppDataSource.getRepository(Teacherdetails);
   const totalLesson = await lessonRepo.count({ where: { creator: userid! } });
-  const teacherDetails = await teacherDetailsRepo.findOneBy({user_id:userid!});
+  const teacherDetails = await teacherDetailsRepo.findOneBy({
+    user_id: userid!,
+  });
   const expiredLesson = await lessonRepo.count({
     where: { creator: userid!, expired: true },
   });
@@ -267,7 +313,7 @@ export const lessonData = async (req: Request, res: Response) => {
 
   res.json({
     proceed: true,
-    isPremium:teacherDetails?.premium??false,
+    isPremium: teacherDetails?.premium ?? false,
     lesson: {
       total: totalLesson,
       expired: expiredLesson,

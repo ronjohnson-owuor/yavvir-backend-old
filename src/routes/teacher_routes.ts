@@ -7,6 +7,7 @@ import {
   checkProfileCompleteness,
   edit_teacher_details,
   get_teacher_details,
+  isPremium,
 } from "../services/teachers";
 import { uploadData } from "../services/filemanager";
 import { createLesson, deleteLesson, getLesson, lessonData, updateLesson } from "../services/lesson";
@@ -62,6 +63,12 @@ router.post(
   "/lessons-data",
   cors(corsOptions),
   async (req: Request, res: Response) => lessonData (req, res)
+);
+
+router.get(
+  "/is-premium",
+  cors(corsOptions),
+  async (req: Request, res: Response) => isPremium (req, res)
 );
 
 export default router;

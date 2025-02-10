@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import { AppDataSource } from "../data-source";
 import { Emailcode } from "../entity/Emailcode";
-import { LessThan } from "typeorm";
+import { LessThan, LessThanOrEqual } from "typeorm";
 import { Lesson } from "../entity/Lesson";
 
 // executes every minute
@@ -11,6 +11,7 @@ export const everyminuteTask = cron.schedule(
     // retrieve all the pin from the database in typeorm
     deleteExpiredPin();
     deleteExpiredLessons();
+    startLessons();
   },
   {
     scheduled: false,
@@ -39,11 +40,28 @@ const deleteExpiredLessons = async () => {
   try {
     let date = new Date(Date.now());
     const expiredLessons = await AppDataSource.getRepository(Lesson).update(
-      { start_time: LessThan(date) },
+      { end_time: LessThan(date) },
       { expired: true }
     );
     if (expiredLessons.affected && expiredLessons.affected > 0) {
       console.log("expired lessons are deleted");
+      return;
+    }
+  } catch (err) {
+    console.log("Error deleting the lessons");
+  }
+};
+
+
+const startLessons = async () => {
+  try {
+    let date = new Date(Date.now()); 
+    const expiredLessons = await AppDataSource.getRepository(Lesson).update(
+      { start_time: LessThanOrEqual(date), inprogress:false,expired:false },
+      { inprogress: true }
+    );
+    if (expiredLessons.affected && expiredLessons.affected > 0) {
+      console.log("a lesson has started");
       return;
     }
   } catch (err) {

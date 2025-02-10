@@ -11,7 +11,6 @@ export const encryptPassWord = (password:string) => {
 
 export const decryptedPassword = (encrypt:string) => {
     const decryptedText = CryptoJS.AES.decrypt(encrypt, encryption_key).toString(CryptoJS.enc.Utf8);
-    console.log(decryptedText);
     return decryptedText;
 
 }

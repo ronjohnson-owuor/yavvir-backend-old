@@ -199,3 +199,29 @@ export const checkProfileCompleteness = async (req: Request, res: Response) => {
   });
   return;
 };
+
+export const isPremium = async (req:Request,res:Response) =>{
+  const {message,proceed,userid} = await validateAuthToken(req.headers.authorization);
+  if(!proceed){
+    res.json({
+      proceed,
+      premium:false
+    });
+    return
+  }
+
+  const teacher_data = await AppDataSource.getRepository(Teacherdetails).findOneBy({user_id:userid!});
+  if(!teacher_data){
+    res.json({
+      proceed:false,
+      premium:false
+    });
+    return;
+  }
+
+  res.json({
+    proceed:true,
+    premium:teacher_data.premium
+  });
+  return;
+}

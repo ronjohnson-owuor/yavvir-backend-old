@@ -22,6 +22,12 @@ export class Lesson {
     start_time: Date
 
     @Column({default:false})
+    inprogress: boolean
+
+    @Column()
+    end_time: Date
+
+    @Column({default:false})
     expired: boolean
 
 }
