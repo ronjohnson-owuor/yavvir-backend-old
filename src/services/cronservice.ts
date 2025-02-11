@@ -4,7 +4,10 @@ import { Emailcode } from "../entity/Emailcode";
 import { LessThan, LessThanOrEqual } from "typeorm";
 import { Lesson } from "../entity/Lesson";
 
-// executes every minute
+let date = new Date(Date.now());
+const eatTime = new Date(date.getTime() + 3 * 60 * 60 * 1000);
+// because our customers are in East africa.
+
 export const everyminuteTask = cron.schedule(
   "* * * * *",
   () => {
@@ -19,7 +22,6 @@ export const everyminuteTask = cron.schedule(
 );
 
 const deleteExpiredPin = async () => {
-  console.log("called");
   const pinRepository = AppDataSource.getRepository(Emailcode);
   const expirationTime = 30 * 60 * 1000;
   const cutoffDate = new Date(Date.now() - expirationTime);
@@ -38,9 +40,8 @@ const deleteExpiredPin = async () => {
 
 const deleteExpiredLessons = async () => {
   try {
-    let date = new Date(Date.now());
     const expiredLessons = await AppDataSource.getRepository(Lesson).update(
-      { end_time: LessThan(date) },
+      { end_time: LessThan(eatTime),expired:false },
       { expired: true }
     );
     if (expiredLessons.affected && expiredLessons.affected > 0) {
@@ -52,16 +53,16 @@ const deleteExpiredLessons = async () => {
   }
 };
 
-
 const startLessons = async () => {
   try {
-    let date = new Date(Date.now()); 
+    let date = new Date(Date.now());
     const expiredLessons = await AppDataSource.getRepository(Lesson).update(
-      { start_time: LessThanOrEqual(date), inprogress:false,expired:false },
+      { start_time: LessThanOrEqual(eatTime), inprogress: false, expired: false },
       { inprogress: true }
     );
     if (expiredLessons.affected && expiredLessons.affected > 0) {
       console.log("a lesson has started");
+      // send email to student and parents
       return;
     }
   } catch (err) {
