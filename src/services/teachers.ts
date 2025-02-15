@@ -4,7 +4,13 @@ import validateAuthToken from "./validateAuthtoken";
 import { AppDataSource } from "../data-source";
 import { Teacherdetails } from "../entity/Teacherdetails";
 import { Users } from "../entity/Users";
+import { Teacherbank } from "../entity/Teacherbank";
+import { TeacherFinancetracker } from "../entity/TeacherFinancetracker";
 
+const teacherBankRepo = AppDataSource.getRepository(Teacherbank);
+const teacherFinanceTrackerRepo = AppDataSource.getRepository(
+  TeacherFinancetracker
+);
 export const edit_teacher_details = async (req: Request, res: Response) => {
   const authresponse = await validateAuthToken(req.headers.authorization);
 
@@ -200,28 +206,169 @@ export const checkProfileCompleteness = async (req: Request, res: Response) => {
   return;
 };
 
-export const isPremium = async (req:Request,res:Response) =>{
-  const {message,proceed,userid} = await validateAuthToken(req.headers.authorization);
-  if(!proceed){
+export const isPremium = async (req: Request, res: Response) => {
+  const { message, proceed, userid } = await validateAuthToken(
+    req.headers.authorization
+  );
+  if (!proceed) {
     res.json({
       proceed,
-      premium:false
+      premium: false,
     });
-    return
+    return;
   }
 
-  const teacher_data = await AppDataSource.getRepository(Teacherdetails).findOneBy({user_id:userid!});
-  if(!teacher_data){
+  const teacher_data = await AppDataSource.getRepository(
+    Teacherdetails
+  ).findOneBy({ user_id: userid! });
+  if (!teacher_data) {
     res.json({
-      proceed:false,
-      premium:false
+      proceed: false,
+      premium: false,
     });
     return;
   }
 
   res.json({
-    proceed:true,
-    premium:teacher_data.premium
+    proceed: true,
+    premium: teacher_data.premium,
   });
   return;
-}
+};
+
+export const getTeacherFinancialDetails = async (
+  req: Request,
+  res: Response
+) => {
+  const { proceed, message, userid } = await validateAuthToken(
+    req.headers.authorization
+  );
+
+  if (!proceed) {
+    res.json({
+      message,
+      proceed,
+    });
+    return;
+  }
+
+  const teacher_bank = await teacherBankRepo.findOneBy({ teacher_id: userid! });
+  if (!teacher_bank) {
+    const insertNewTeacher = teacherBankRepo.create({
+      teacher_id: userid!,
+      amount: 0,
+    });
+    await teacherBankRepo.save(insertNewTeacher);
+
+    res.json({
+      proceed: true,
+      balance: 0,
+      pending: 0,
+      failled: 0,
+      total: 0,
+      successfull: 0,
+    });
+    return;
+  }
+
+  const teacherFinanceHistory = await teacherFinanceTrackerRepo.findBy({
+    teacher_id: userid!,
+  });
+
+  //  there is no finance history
+  if (teacherFinanceHistory.length == 0) {
+    res.json({
+      proceed: true,
+      balance: teacher_bank.amount,
+      pending: 0,
+      failled: 0,
+      total: 0,
+      successfull: 0,
+    });
+    return;
+  }
+
+  let total = 0;
+  let pending = 0;
+  let failled = 0;
+  let successfull = 0;
+
+  teacherFinanceHistory.forEach((each_receipt) => {
+    // find number of pending receipt
+    if (each_receipt.status == 1) {
+      pending += 1;
+    } else if (each_receipt.status == 2) {
+      failled += 1;
+    } else if (each_receipt.status == 3) {
+      successfull += 1;
+      // calculate  total withdrawal since login
+      total += each_receipt.amount;
+    }
+  });
+
+  res.json({
+    proceed: true,
+    balance: teacher_bank.amount,
+    pending,
+    failled,
+    total,
+    successfull,
+  });
+  return;
+};
+
+export const requestWithdrawal = async (req: Request, res: Response) => {
+  const { proceed, message, userid } = await validateAuthToken(
+    req.headers.authorization
+  );
+  if (!proceed) {
+    res.json({
+      message,
+      proceed,
+    });
+    return;
+  }
+
+  const bodyValidationResponse = requestvalidation(req.body, ["amount:number"]);
+  if (!bodyValidationResponse.proceed) {
+    res.json({
+      message: bodyValidationResponse.message,
+      proceed: false,
+    });
+    return;
+  }
+
+  const status = 1; // 1 means withdrawal is pending
+  const amount = req.body.amount;
+  const teacher_id = userid!;
+
+  const teacher_data_balance = await teacherBankRepo.findOneBy({ teacher_id });
+  if (!teacher_data_balance) {
+    res.json({
+      message:
+        "unable to locate teacher in the records make sure you are signed in to your teacher account and then reload the page",
+      proceed: false,
+    });
+    return;
+  }
+  if (teacher_data_balance.amount < amount) {
+    res.json({
+      message: "insufficient balance to complete transaction.",
+      proceed: false,
+    });
+    return;
+  }
+
+  const insertRecords = teacherFinanceTrackerRepo.create({
+    teacher_id,
+    amount,
+    status,
+  });
+  await teacherFinanceTrackerRepo.save(insertRecords);
+  res.json({
+    message:
+      "your withdrawal has been received and is being processed, you shall receive the money between 1 and 2 working days.",
+    proceed: true,
+  });
+  return;
+};
