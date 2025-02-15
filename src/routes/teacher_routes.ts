@@ -7,7 +7,9 @@ import {
   checkProfileCompleteness,
   edit_teacher_details,
   get_teacher_details,
+  getTeacherFinancialDetails,
   isPremium,
+  requestWithdrawal,
 } from "../services/teachers";
 import { uploadData } from "../services/filemanager";
 import { createLesson, deleteLesson, getLesson, lessonData, updateLesson } from "../services/lesson";
@@ -71,4 +73,17 @@ router.get(
   async (req: Request, res: Response) => isPremium (req, res)
 );
 
+router.post (
+  "/get-finance-details",
+  cors(corsOptions),
+  async (req: Request, res: Response) => getTeacherFinancialDetails (req, res)
+);
+
+router.post (
+  "/withdraw",
+  cors(corsOptions),
+  async (req: Request, res: Response) => requestWithdrawal (req, res)
+);
+
 export default router;
+
