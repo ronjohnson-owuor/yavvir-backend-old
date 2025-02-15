@@ -10,6 +10,8 @@ import {
   getTeacherFinancialDetails,
   isPremium,
   requestWithdrawal,
+  teacherPaymentHistory,
+  unpaidRequests,
 } from "../services/teachers";
 import { uploadData } from "../services/filemanager";
 import { createLesson, deleteLesson, getLesson, lessonData, updateLesson } from "../services/lesson";
@@ -83,6 +85,18 @@ router.post (
   "/withdraw",
   cors(corsOptions),
   async (req: Request, res: Response) => requestWithdrawal (req, res)
+);
+
+router.post (
+  "/transaction-tracker",
+  cors(corsOptions),
+  async (req: Request, res: Response) => teacherPaymentHistory (req, res)
+);
+
+router.post (
+  "/pending-transactions",
+  cors(corsOptions),
+  async (req: Request, res: Response) => unpaidRequests (req, res)
 );
 
 export default router;

@@ -372,3 +372,72 @@ export const requestWithdrawal = async (req: Request, res: Response) => {
   });
   return;
 };
+
+
+// 1.get payment and display them to the user
+
+export const teacherPaymentHistory = async (req:Request,res:Response) =>{
+  const { proceed, message, userid } = await validateAuthToken(
+    req.headers.authorization
+  );
+  if (!proceed) {
+    res.json({
+      message,
+      proceed,
+    });
+    return;
+  }
+
+  const status = req.body.status;
+  const teacher_id = userid!;
+
+   if(!status || status > 3){
+    const allTransactions = await teacherFinanceTrackerRepo.findBy({teacher_id});
+    res.json({
+      proceed:true,
+      data:allTransactions
+    });
+    return;
+   }
+
+   if(status ==1){
+    const pendingTransactions = await teacherFinanceTrackerRepo.findBy({teacher_id,status});
+    res.json({
+      proceed:true,
+      data:pendingTransactions
+    });
+    return;
+   }
+
+   if(status ==2){
+    const failledTransactions = await teacherFinanceTrackerRepo.findBy({teacher_id,status});
+    res.json({
+      proceed:true,
+      data:failledTransactions
+    });
+    return;
+   }
+
+   if(status ==3){
+    const paidTransactions = await teacherFinanceTrackerRepo.findBy({teacher_id,status});
+    res.json({
+      proceed:true,
+      data:paidTransactions
+    });
+    return;
+   }
+
+}
+
+
+export const unpaidRequests = async (req:Request,res:Response) => {
+  let status= 1;
+  const pendingTransactions = await teacherFinanceTrackerRepo.findBy({status});
+  res.json({
+    proceed:true,
+    data:pendingTransactions
+  });
+  return;
+}
+
+
